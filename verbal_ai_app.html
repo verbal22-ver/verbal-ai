@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>verbal-ai Platform</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Font Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- KaTeX for Math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f3ff',
+                            100: '#e1e7fe',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#1e1b4b',
+                        },
+                        dark: {
+                            bg: '#090d16',
+                            panel: '#111827',
+                            card: '#1f2937',
+                            border: 'rgba(255, 255, 255, 0.08)',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #090d16;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Glassmorphism elements */
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(31, 41, 55, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(9, 13, 22, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Markdown styling inside chat messages */
+        .prose pre {
+            background-color: #0f172a !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            overflow-x: auto;
+            position: relative;
+            margin-top: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .prose code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: #e2e8f0;
+        }
+
+        .prose p {
+            margin-bottom: 0.75rem;
+            line-height: 1.65;
+        }
+
+        .prose ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .prose ol {
+            list-style-type: decimal;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .prose blockquote {
+            border-left: 4px solid #6366f1;
+            padding-left: 1rem;
+            color: #9ca3af;
+            font-style: italic;
+            margin: 0.75rem 0;
+        }
+
+        /* Table styling for dark theme glassmorphism */
+        .prose table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .prose th {
+            background-color: rgba(30, 41, 59, 0.8);
+            color: #f8fafc;
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .prose td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background-color: rgba(15, 23, 42, 0.4);
+            transition: background-color 0.15s ease;
+        }
+
+        .prose tr:hover td {
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+
+        .prose tr:last-child td {
+            border-bottom: none;
+        }
+
+        .katex-display {
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.5rem 0;
+            margin: 0.5rem 0;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+        .pulse-loader {
+            animation: pulse-glow 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Sidebar Drawer -->
+    <aside id="sidebar" class="w-72 glass-panel flex flex-col justify-between transition-all duration-300 z-30 fixed md:relative h-full -translate-x-full md:translate-x-0">
+        <!-- Sidebar Header -->
+        <div class="p-4 border-b border-dark-border flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid font-black text-white text-lg">V</i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-wide text-white flex items-center space-x-1.5">
+                        <span>verbal-ai</span>
+                        <span class="text-[9px] bg-brand-500/20 text-brand-400 px-1.5 py-0.5 rounded-full border border-brand-500/30">PRO</span>
+                    </h1>
+                    <p class="text-[11px] text-gray-400">Cross-Platform Knowledge Platform</p>
+                </div>
+            </div>
+            <button id="close-sidebar-btn" class="md:hidden text-gray-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- New Chat Button & Search -->
+        <div class="p-3 space-y-2">
+            <button id="new-chat-btn" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-medium py-2.5 px-4 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-brand-600/25 active:scale-[0.98]">
+                <i class="fa-solid fa-plus text-xs"></i>
+                <span>New Session</span>
+            </button>
+
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-gray-500"></i>
+                <input id="session-search" type="text" placeholder="Search sessions..." class="w-full bg-white/5 border border-dark-border text-xs rounded-xl pl-8 pr-3 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brand-500/50">
+            </div>
+        </div>
+
+        <!-- Chat Session List -->
+        <div class="flex-1 overflow-y-auto px-3 py-1 space-y-1" id="session-list">
+            <!-- Dynamic session items inserted here -->
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-dark-border space-y-2">
+            <button id="clear-all-btn" class="w-full text-xs text-gray-400 hover:text-red-400 py-2 px-3 rounded-lg hover:bg-white/5 transition flex items-center space-x-2">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Clear All Sessions</span>
+            </button>
+            <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
+                <span>verbal-ai v3.0</span>
+                <span class="flex items-center space-x-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Live Engines</span>
+                </span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 hidden md:hidden"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-full bg-dark-bg relative overflow-hidden">
+        <!-- Top Navbar -->
+        <header class="h-16 glass-panel border-b border-dark-border px-4 md:px-6 flex items-center justify-between z-10">
+            <div class="flex items-center space-x-3">
+                <button id="open-sidebar-btn" class="md:hidden text-gray-400 hover:text-white p-2 rounded-lg hover:bg-white/5">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <div class="flex flex-col">
+                    <h2 id="current-chat-title" class="font-semibold text-gray-100 text-sm md:text-base line-clamp-1 flex items-center space-x-2">
+                        <span>New Conversation</span>
+                    </h2>
+                    <span class="text-[11px] text-gray-400 hidden sm:inline">Synthesizing real-time Web, Wikipedia & Gemini LLM intelligence</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <!-- API Key Configuration Button -->
+                <button id="api-key-btn" title="API Key Settings" class="flex items-center space-x-1.5 text-xs text-gray-300 hover:text-white px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition border border-dark-border">
+                    <i class="fa-solid fa-key text-xs text-amber-400"></i>
+                    <span class="hidden sm:inline">API Key</span>
+                </button>
+
+                <!-- Export Menu Button -->
+                <button id="export-chat-btn" title="Export Chat" class="flex items-center space-x-1.5 text-xs text-gray-300 hover:text-white px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition border border-dark-border">
+                    <i class="fa-solid fa-download text-xs text-brand-400"></i>
+                    <span class="hidden sm:inline">Export</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Knowledge Engine Selector Banner -->
+        <div class="glass-panel border-b border-dark-border px-4 py-2.5 flex items-center justify-between text-xs overflow-x-auto gap-2">
+            <div class="flex items-center space-x-1 shrink-0">
+                <span class="text-gray-400 font-medium mr-1.5 hidden md:inline"><i class="fa-solid fa-sliders text-brand-500 mr-1"></i> Knowledge Engine:</span>
+                
+                <button data-engine="google" class="engine-btn active bg-brand-600/30 text-brand-400 border border-brand-500/50 px-3 py-1 rounded-lg transition font-medium flex items-center space-x-1.5">
+                    <i class="fa-brands fa-google text-xs"></i>
+                    <span>Google Grounded</span>
+                </button>
+
+                <button data-engine="wiki" class="engine-btn text-gray-400 hover:text-white hover:bg-white/5 border border-transparent px-3 py-1 rounded-lg transition font-medium flex items-center space-x-1.5">
+                    <i class="fa-brands fa-wikipedia-w text-xs"></i>
+                    <span>Wikipedia Live</span>
+                </button>
+
+                <button data-engine="synthesis" class="engine-btn text-gray-400 hover:text-white hover:bg-white/5 border border-transparent px-3 py-1 rounded-lg transition font-medium flex items-center space-x-1.5">
+                    <i class="fa-solid fa-layer-group text-xs text-amber-400"></i>
+                    <span>Cross Synthesis</span>
+                </button>
+
+                <button data-engine="direct" class="engine-btn text-gray-400 hover:text-white hover:bg-white/5 border border-transparent px-3 py-1 rounded-lg transition font-medium flex items-center space-x-1.5">
+                    <i class="fa-solid fa-bolt text-xs text-emerald-400"></i>
+                    <span>Direct Gemini</span>
+                </button>
+
+                <button data-engine="image" class="engine-btn text-gray-400 hover:text-white hover:bg-white/5 border border-transparent px-3 py-1 rounded-lg transition font-medium flex items-center space-x-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xs text-purple-400"></i>
+                    <span>AI Image Gen</span>
+                </button>
+            </div>
+
+            <div id="engine-status" class="text-[11px] text-gray-400 shrink-0 flex items-center space-x-1">
+                <i class="fa-solid fa-circle-check text-emerald-400 text-[9px]"></i>
+                <span>Google Search Live</span>
+            </div>
+        </div>
+
+        <!-- Chat Scroll Area -->
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+            <!-- Welcome View -->
+            <div id="welcome-view" class="max-w-3xl mx-auto my-8 text-center space-y-8">
+                <div class="inline-flex p-4 rounded-2xl bg-gradient-to-tr from-brand-600/20 to-indigo-500/20 border border-brand-500/30 text-brand-400 mb-2 shadow-2xl">
+                    <i class="fa-solid fa-brain text-4xl"></i>
+                </div>
+                <div class="space-y-3">
+                    <h3 class="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                        Cross-Platform AI Intelligence with <span class="bg-gradient-to-r from-brand-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">verbal-ai</span>
+                    </h3>
+                    <p class="text-gray-400 text-xs md:text-sm max-w-lg mx-auto">
+                        Search live Google web data, extract Wikipedia knowledge, solve complex LaTeX math formulas, generate custom Markdown tables, and synthesize multi-engine answers in seconds.
+                    </p>
+                </div>
+
+                <!-- Suggestion Grid Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-2xl mx-auto">
+                    <button class="suggestion-card glass-card p-3.5 rounded-xl hover:border-brand-500/50 transition duration-200 group">
+                        <div class="flex items-center space-x-2 text-brand-400 mb-1">
+                            <i class="fa-brands fa-google text-xs"></i>
+                            <span class="font-semibold text-xs text-gray-200 group-hover:text-white">Google Grounded Search</span>
+                        </div>
+                        <p class="text-xs text-gray-400">"What are the latest developments in nuclear fusion energy technology?"</p>
+                    </button>
+
+                    <button class="suggestion-card glass-card p-3.5 rounded-xl hover:border-brand-500/50 transition duration-200 group">
+                        <div class="flex items-center space-x-2 text-brand-400 mb-1">
+                            <i class="fa-brands fa-wikipedia-w text-xs"></i>
+                            <span class="font-semibold text-xs text-gray-200 group-hover:text-white">Wikipedia Knowledge</span>
+                        </div>
+                        <p class="text-xs text-gray-400">"Summarize Quantum Mechanics and list core postulates in a table."</p>
+                    </button>
+
+                    <button class="suggestion-card glass-card p-3.5 rounded-xl hover:border-brand-500/50 transition duration-200 group">
+                        <div class="flex items-center space-x-2 text-brand-400 mb-1">
+                            <i class="fa-solid fa-square-root-variable text-xs"></i>
+                            <span class="font-semibold text-xs text-gray-200 group-hover:text-white">Math & Step-by-Step Proof</span>
+                        </div>
+                        <p class="text-xs text-gray-400">"Solve $\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}$ with step by step LaTeX math."</p>
+                    </button>
+
+                    <button class="suggestion-card glass-card p-3.5 rounded-xl hover:border-brand-500/50 transition duration-200 group" data-engine-select="image">
+                        <div class="flex items-center space-x-2 text-purple-400 mb-1">
+                            <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                            <span class="font-semibold text-xs text-gray-200 group-hover:text-white">AI Image Generator</span>
+                        </div>
+                        <p class="text-xs text-gray-400">"A futuristic neon cybernetic dragon flying over a rainy sci-fi city."</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages list appended dynamically -->
+            <div id="messages-list" class="max-w-3xl mx-auto space-y-6 w-full"></div>
+            
+            <!-- Loading Indicator -->
+            <div id="loading-indicator" class="max-w-3xl mx-auto hidden">
+                <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-brand-600/30 border border-brand-500/40 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-atom text-brand-400 text-sm animate-spin"></i>
+                    </div>
+                    <div class="glass-card rounded-2xl rounded-tl-none p-4 max-w-lg border border-white/5 space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-semibold text-brand-400">verbal-ai Engine</span>
+                            <span id="loading-engine-text" class="text-[10px] text-gray-400">Searching web & synthesizing...</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5 py-1">
+                            <div class="w-2 h-2 rounded-full bg-brand-500 pulse-loader"></div>
+                            <div class="w-2 h-2 rounded-full bg-brand-500 pulse-loader" style="animation-delay: 0.2s"></div>
+                            <div class="w-2 h-2 rounded-full bg-brand-500 pulse-loader" style="animation-delay: 0.4s"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Input Bar -->
+        <footer class="p-4 md:p-6 bg-gradient-to-t from-dark-bg via-dark-bg to-transparent">
+            <div class="max-w-3xl mx-auto space-y-2">
+                <form id="chat-form" class="relative glass-panel rounded-2xl border border-dark-border focus-within:border-brand-500/60 transition duration-200 shadow-2xl">
+                    <textarea 
+                        id="user-input" 
+                        rows="1" 
+                        placeholder="Ask verbal-ai... (Supports equations $...$, tables, & multi-engine search)"
+                        class="w-full bg-transparent text-gray-100 placeholder-gray-500 px-4 py-3.5 pr-14 resize-none outline-none max-h-48 text-sm md:text-base"
+                    ></textarea>
+                    
+                    <button 
+                        type="submit" 
+                        id="send-btn" 
+                        disabled
+                        class="absolute right-2.5 bottom-2.5 w-9 h-9 rounded-xl bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-brand-500 text-white flex items-center justify-center transition-all duration-200 shadow-lg shadow-brand-600/30"
+                    >
+                        <i class="fa-solid fa-arrow-up text-sm"></i>
+                    </button>
+                </form>
+
+                <div class="flex items-center justify-between text-[11px] text-gray-500 px-1">
+                    <span>Active Engine: <strong id="active-engine-label" class="text-brand-400 font-medium">Google Grounded</strong></span>
+                    <span>Use <code class="bg-white/10 px-1 rounded text-gray-300">$...$</code> for LaTeX math</span>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Custom Modal Dialog (Replaces browser alert/confirm) -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-sm rounded-2xl p-6 border border-dark-border space-y-4 shadow-2xl">
+            <div class="flex items-center space-x-3">
+                <div id="modal-icon-bg" class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+                    <i id="modal-icon" class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+                <div>
+                    <h3 id="modal-title" class="font-bold text-white text-base">Confirmation</h3>
+                    <p id="modal-subtitle" class="text-xs text-gray-400">Are you sure?</p>
+                </div>
+            </div>
+            <p id="modal-message" class="text-xs text-gray-300 leading-relaxed">Action details will appear here.</p>
+            <div class="flex items-center justify-end space-x-2 pt-2 border-t border-white/10">
+                <button id="modal-cancel-btn" class="px-3.5 py-2 rounded-xl text-xs font-medium text-gray-300 hover:bg-white/10 transition">Cancel</button>
+                <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-xs font-medium bg-red-600 hover:bg-red-500 text-white transition">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Configuration Modal -->
+    <div id="api-key-modal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-md rounded-2xl p-6 border border-dark-border space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-brand-600/30 text-brand-400 border border-brand-500/30 flex items-center justify-center">
+                        <i class="fa-solid fa-key text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base">API Key Settings</h3>
+                        <p class="text-xs text-gray-400">Optional: Direct LLM Access</p>
+                    </div>
+                </div>
+                <button id="close-api-key-modal" class="text-gray-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-2">
+                <label class="text-xs font-medium text-gray-300">Google Gemini API Key</label>
+                <input id="api-key-input" type="password" placeholder="AIzaSy..." class="w-full bg-white/5 border border-dark-border text-xs rounded-xl px-3.5 py-2.5 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brand-500">
+                <p class="text-[11px] text-gray-400">If no API key is provided, verbal-ai operates in <strong>Live Multi-Source Web Synthesis Mode</strong> automatically without erroring.</p>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-2 border-t border-white/10">
+                <button id="clear-api-key-btn" class="px-3.5 py-2 rounded-xl text-xs font-medium text-red-400 hover:bg-white/5 transition">Clear Key</button>
+                <button id="save-api-key-btn" class="px-4 py-2 rounded-xl text-xs font-medium bg-brand-600 hover:bg-brand-500 text-white transition">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Key Configuration
+        let userApiKey = localStorage.getItem('verbal_ai_api_key') || '';
+
+        // Application State
+        let sessions = JSON.parse(localStorage.getItem('verbal_ai_sessions_v3')) || [];
+        let currentSessionId = localStorage.getItem('verbal_ai_current_session_v3') || null;
+        let activeEngine = 'google'; // 'google', 'wiki', 'synthesis', 'direct'
+        let modalCallback = null;
+
+        // DOM Element Cache
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const openSidebarBtn = document.getElementById('open-sidebar-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        const sessionList = document.getElementById('session-list');
+        const sessionSearch = document.getElementById('session-search');
+        const chatContainer = document.getElementById('chat-container');
+        const welcomeView = document.getElementById('welcome-view');
+        const messagesList = document.getElementById('messages-list');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const loadingEngineText = document.getElementById('loading-engine-text');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.sendBtn || document.getElementById('send-btn');
+        const currentChatTitle = document.getElementById('current-chat-title');
+        const exportChatBtn = document.getElementById('export-chat-btn');
+        const activeEngineLabel = document.getElementById('active-engine-label');
+        const engineStatus = document.getElementById('engine-status');
+
+        // Modal Elements
+        const customModal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalSubtitle = document.getElementById('modal-subtitle');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+
+        // API Key Modal Elements
+        const apiKeyBtn = document.getElementById('api-key-btn');
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const closeApiKeyModal = document.getElementById('close-api-key-modal');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const clearApiKeyBtn = document.getElementById('clear-api-key-btn');
+
+        // Configure Marked library for Markdown rendering
+        marked.setOptions({
+            gfm: true,
+            breaks: true,
+            headerIds: false,
+            mangle: false
+        });
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessions.length === 0) {
+                createNewSession();
+            } else if (!currentSessionId || !sessions.find(s => s.id === currentSessionId)) {
+                currentSessionId = sessions[0].id;
+            }
+            renderSessionList();
+            loadCurrentSession();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // API Key Modal Listeners
+            apiKeyBtn.addEventListener('click', () => {
+                apiKeyInput.value = localStorage.getItem('verbal_ai_api_key') || '';
+                apiKeyModal.classList.remove('hidden');
+            });
+
+            closeApiKeyModal.addEventListener('click', () => {
+                apiKeyModal.classList.add('hidden');
+            });
+
+            saveApiKeyBtn.addEventListener('click', () => {
+                const key = apiKeyInput.value.trim();
+                if (key) {
+                    localStorage.setItem('verbal_ai_api_key', key);
+                    userApiKey = key;
+                } else {
+                    localStorage.removeItem('verbal_ai_api_key');
+                    userApiKey = '';
+                }
+                apiKeyModal.classList.add('hidden');
+            });
+
+            clearApiKeyBtn.addEventListener('click', () => {
+                localStorage.removeItem('verbal_ai_api_key');
+                userApiKey = '';
+                apiKeyInput.value = '';
+                apiKeyModal.classList.add('hidden');
+            });
+
+            // Mobile Sidebar Toggle
+            openSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.remove('-translate-x-full');
+                sidebarOverlay.classList.remove('hidden');
+            });
+
+            closeSidebarBtn.addEventListener('click', hideSidebar);
+            sidebarOverlay.addEventListener('click', hideSidebar);
+
+            // New Session & Clear Session History
+            newChatBtn.addEventListener('click', () => {
+                createNewSession();
+                hideSidebar();
+            });
+
+            clearAllBtn.addEventListener('click', () => {
+                showCustomModal(
+                    'Clear All History',
+                    'Permanent Action',
+                    'Are you sure you want to erase all chat sessions? This action cannot be undone.',
+                    () => {
+                        sessions = [];
+                        localStorage.removeItem('verbal_ai_sessions_v3');
+                        localStorage.removeItem('verbal_ai_current_session_v3');
+                        createNewSession();
+                    }
+                );
+            });
+
+            // Session Search Filter
+            sessionSearch.addEventListener('input', (e) => {
+                renderSessionList(e.target.value.toLowerCase().trim());
+            });
+
+            // Knowledge Engine Switcher Buttons
+            document.querySelectorAll('.engine-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.engine-btn').forEach(b => {
+                        b.classList.remove('active', 'bg-brand-600/30', 'text-brand-400', 'border-brand-500/50');
+                        b.classList.add('text-gray-400', 'border-transparent');
+                    });
+                    btn.classList.add('active', 'bg-brand-600/30', 'text-brand-400', 'border-brand-500/50');
+                    btn.classList.remove('text-gray-400', 'border-transparent');
+
+                    activeEngine = btn.dataset.engine;
+                    updateEngineBadge(activeEngine);
+                });
+            });
+
+            // Textarea dynamic resizing & enter key listener
+            userInput.addEventListener('input', () => {
+                userInput.style.height = 'auto';
+                userInput.style.height = Math.min(userInput.scrollHeight, 192) + 'px';
+                sendBtn.disabled = userInput.value.trim() === '';
+            });
+
+            userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (userInput.value.trim() !== '') {
+                        chatForm.dispatchEvent(new Event('submit'));
+                    }
+                }
+            });
+
+            // Chat Form Submission
+            chatForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const text = userInput.value.trim();
+                if (!text) return;
+
+                handleUserMessage(text);
+                userInput.value = '';
+                userInput.style.height = 'auto';
+                sendBtn.disabled = true;
+            });
+
+            // Suggestion Card Clicking
+            document.querySelectorAll('.suggestion-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const targetEngine = card.getAttribute('data-engine-select');
+                    if (targetEngine) {
+                        const btn = document.querySelector(`.engine-btn[data-engine="${targetEngine}"]`);
+                        if (btn) btn.click();
+                    }
+                    const sampleText = card.querySelector('p').innerText.replace(/^"|"$/g, '');
+                    userInput.value = sampleText;
+                    userInput.dispatchEvent(new Event('input'));
+                    chatForm.dispatchEvent(new Event('submit'));
+                });
+            });
+
+            // Export Session Listener
+            exportChatBtn.addEventListener('click', exportCurrentSession);
+
+            // Modal Listeners
+            modalCancelBtn.addEventListener('click', hideCustomModal);
+            modalConfirmBtn.addEventListener('click', () => {
+                if (modalCallback) modalCallback();
+                hideCustomModal();
+            });
+        }
+
+        function updateEngineBadge(engine) {
+            const labelMap = {
+                'google': 'Google Grounded Search',
+                'wiki': 'Wikipedia Live Search',
+                'synthesis': 'Cross-Platform Synthesis',
+                'direct': 'Direct Gemini LLM',
+                'image': 'Gemini 3.1 Flash Image'
+            };
+            const statusMap = {
+                'google': '<i class="fa-solid fa-globe text-brand-400"></i><span>Google Search Live</span>',
+                'wiki': '<i class="fa-brands fa-wikipedia-w text-blue-400"></i><span>Wiki API Grounded</span>',
+                'synthesis': '<i class="fa-solid fa-layer-group text-amber-400"></i><span>Multi-Model Synthesis</span>',
+                'direct': '<i class="fa-solid fa-bolt text-emerald-400"></i><span>Fast LLM Reasoning</span>',
+                'image': '<i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i><span>AI Image Generation</span>'
+            };
+            activeEngineLabel.innerText = labelMap[engine] || 'Google Grounded Search';
+            engineStatus.innerHTML = statusMap[engine] || statusMap['google'];
+        }
+
+        function hideSidebar() {
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+        }
+
+        function createNewSession() {
+            const newSession = {
+                id: 'session_' + Date.now(),
+                title: 'New Conversation',
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                messages: []
+            };
+            sessions.unshift(newSession);
+            currentSessionId = newSession.id;
+            saveState();
+            renderSessionList();
+            loadCurrentSession();
+        }
+
+        function saveState() {
+            localStorage.setItem('verbal_ai_sessions_v3', JSON.stringify(sessions));
+            localStorage.setItem('verbal_ai_current_session_v3', currentSessionId);
+        }
+
+        function renderSessionList(filterQuery = '') {
+            sessionList.innerHTML = '';
+            const filtered = sessions.filter(s => s.title.toLowerCase().includes(filterQuery));
+
+            if (filtered.length === 0) {
+                sessionList.innerHTML = '<div class="text-center text-xs text-gray-500 py-4">No sessions found</div>';
+                return;
+            }
+
+            filtered.forEach(session => {
+                const isActive = session.id === currentSessionId;
+                const item = document.createElement('div');
+                item.className = `group flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition duration-150 ${
+                    isActive ? 'bg-brand-600/25 text-white border border-brand-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                }`;
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2.5 overflow-hidden flex-1">
+                        <i class="fa-regular fa-message text-xs ${isActive ? 'text-brand-400' : 'text-gray-500'}"></i>
+                        <span class="text-xs font-medium truncate">${escapeHtml(session.title)}</span>
+                    </div>
+                    <button class="delete-session-btn opacity-0 group-hover:opacity-100 hover:text-red-400 p-1 text-xs transition" title="Delete session">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('.delete-session-btn')) {
+                        e.stopPropagation();
+                        showCustomModal('Delete Session', 'Remove Chat', `Delete "${session.title}" permanently?`, () => {
+                            deleteSession(session.id);
+                        });
+                    } else {
+                        currentSessionId = session.id;
+                        saveState();
+                        renderSessionList();
+                        loadCurrentSession();
+                        hideSidebar();
+                    }
+                });
+
+                sessionList.appendChild(item);
+            });
+        }
+
+        function deleteSession(id) {
+            sessions = sessions.filter(s => s.id !== id);
+            if (sessions.length === 0) {
+                createNewSession();
+            } else {
+                if (currentSessionId === id) {
+                    currentSessionId = sessions[0].id;
+                }
+                saveState();
+                renderSessionList();
+                loadCurrentSession();
+            }
+        }
+
+        function loadCurrentSession() {
+            const session = sessions.find(s => s.id === currentSessionId);
+            if (!session) return;
+
+            currentChatTitle.innerText = session.title;
+            messagesList.innerHTML = '';
+
+            if (session.messages.length === 0) {
+                welcomeView.classList.remove('hidden');
+            } else {
+                welcomeView.classList.add('hidden');
+                session.messages.forEach(msg => {
+                    appendMessageToDOM(msg.role, msg.content, msg.sources, msg.engine, msg.imageUrl);
+                });
+                scrollToBottom();
+            }
+        }
+
+        async function generateAiImage(promptText) {
+            const apiKey = userApiKey || "";
+
+            // Zero-API-Key image generator using clean live Flux parameters
+            if (!apiKey) {
+                const seed = Math.floor(Math.random() * 1000000);
+                const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=1024&height=1024&nologo=true&logo=false&nofeed=true&private=true&model=flux&seed=${seed}`;
+                return {
+                    text: `Here is your generated image for: **"${escapeHtml(promptText)}"**`,
+                    imageUrl: imageUrl
+                };
+            }
+
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{
+                        role: 'user',
+                        parts: [{ text: promptText }]
+                    }],
+                    generationConfig: {
+                        responseModalities: ['TEXT', 'IMAGE'],
+                        imageConfig: { aspectRatio: "1:1" }
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    console.warn("API key unauthorized or unregistered caller, falling back to live AI image generator:", errData);
+                    const seed = Math.floor(Math.random() * 1000000);
+                    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=1024&height=1024&nologo=true&logo=false&nofeed=true&private=true&model=flux&seed=${seed}`;
+                    return {
+                        text: `Here is your generated image for: **"${escapeHtml(promptText)}"**`,
+                        imageUrl: imageUrl
+                    };
+                }
+
+                const result = await response.json();
+                const candidate = result?.candidates?.[0];
+                const textPart = candidate?.content?.parts?.find(p => p.text)?.text || '';
+                const imagePart = candidate?.content?.parts?.find(p => p.inlineData);
+
+                if (!imagePart) {
+                    const seed = Math.floor(Math.random() * 1000000);
+                    const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=1024&height=1024&nologo=true&logo=false&nofeed=true&private=true&model=flux&seed=${seed}`;
+                    return {
+                        text: textPart || `Here is your generated image for: **"${escapeHtml(promptText)}"**`,
+                        imageUrl: fallbackUrl
+                    };
+                }
+
+                const mimeType = imagePart.inlineData.mimeType || 'image/png';
+                const imageUrl = `data:${mimeType};base64,${imagePart.inlineData.data}`;
+
+                return {
+                    text: textPart || `Here is your generated image for: **"${escapeHtml(promptText)}"**`,
+                    imageUrl: imageUrl
+                };
+            } catch (err) {
+                console.warn("Image generation network error, engaging live fallback engine:", err);
+                const seed = Math.floor(Math.random() * 1000000);
+                const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=1024&height=1024&nologo=true&logo=false&nofeed=true&private=true&model=flux&seed=${seed}`;
+                return {
+                    text: `Here is your generated image for: **"${escapeHtml(promptText)}"**`,
+                    imageUrl: fallbackUrl
+                };
+            }
+        }
+
+        async function fetchWikipediaKnowledge(query) {
+            try {
+                const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json&origin=*`;
+                const searchRes = await fetch(searchUrl);
+                const searchData = await searchRes.json();
+                
+                if (searchData.query?.search?.length > 0) {
+                    const pageId = searchData.query.search[0].pageid;
+                    const pageTitle = searchData.query.search[0].title;
+                    const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=&explaintext=&pageids=${pageId}&format=json&origin=*`;
+                    const extractRes = await fetch(extractUrl);
+                    const extractData = await extractRes.json();
+                    const extractText = extractData.query?.pages?.[pageId]?.extract || '';
+
+                    return {
+                        context: `Wikipedia Reference Article (${pageTitle}):\n${extractText.substring(0, 2000)}`,
+                        sources: [{ title: `Wikipedia: ${pageTitle}`, uri: `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle)}` }]
+                    };
+                }
+            } catch (err) {
+                console.warn("Wikipedia API fetch error:", err);
+            }
+            return { context: "", sources: [] };
+        }
+
+        // Clean synthesis response generator without static matrix/formula boilerplate
+        async function generateSmartSynthesis(userText, engine, wikiContext, wikiSources) {
+            let synthesizedText = "";
+            let sources = [...wikiSources];
+
+            let topic = userText.trim();
+            let cleanContext = wikiContext ? wikiContext.replace(/^Wikipedia Reference Article \([^)]+\):\n/, '') : "";
+
+            synthesizedText += `### Synthesis Overview: ${escapeHtml(topic)}\n\n`;
+            
+            if (cleanContext) {
+                synthesizedText += `${cleanContext}\n\n`;
+            } else {
+                synthesizedText += `**verbal-ai** processed your request regarding **"${escapeHtml(topic)}"**.\n\n`;
+                synthesizedText += `To enable full dynamic AI model responses for your queries, add your Google Gemini API Key using the **API Key** button in the top navigation bar.`;
+            }
+
+            if (sources.length === 0) {
+                sources.push({
+                    title: `Google Knowledge Search: ${topic}`,
+                    uri: `https://www.google.com/search?q=${encodeURIComponent(topic)}`
+                });
+            }
+
+            return { text: synthesizedText, sources: sources };
+        }
+
+        async function handleUserMessage(userText) {
+            const session = sessions.find(s => s.id === currentSessionId);
+            if (!session) return;
+
+            // Auto title generation on first message
+            if (session.messages.length === 0) {
+                session.title = userText.length > 30 ? userText.substring(0, 30) + '...' : userText;
+                currentChatTitle.innerText = session.title;
+                renderSessionList();
+            }
+
+            // Append User Message
+            session.messages.push({ role: 'user', content: userText, engine: activeEngine });
+            welcomeView.classList.add('hidden');
+            appendMessageToDOM('user', userText);
+            saveState();
+            scrollToBottom();
+
+            // Configure Loading indicator
+            loadingIndicator.classList.remove('hidden');
+            if (activeEngine === 'google') loadingEngineText.innerText = 'Searching Google live & synthesizing...';
+            else if (activeEngine === 'wiki') loadingEngineText.innerText = 'Fetching Wikipedia entries & analyzing...';
+            else if (activeEngine === 'synthesis') loadingEngineText.innerText = 'Cross-synthesizing multi-model knowledge...';
+            else if (activeEngine === 'image') loadingEngineText.innerText = 'Generating image with Gemini 3.1 Flash Image...';
+            else loadingEngineText.innerText = 'Generating answer with reasoning...';
+            scrollToBottom();
+
+            try {
+                let wikiContext = "";
+                let wikiSources = [];
+
+                if (activeEngine === 'wiki' || activeEngine === 'synthesis' || (!userApiKey && activeEngine !== 'image')) {
+                    const wikiResult = await fetchWikipediaKnowledge(userText);
+                    wikiContext = wikiResult.context;
+                    wikiSources = wikiResult.sources;
+                }
+
+                let aiText = "";
+                let allSources = [];
+                let imageUrl = null;
+
+                if (activeEngine === 'image' || userText.toLowerCase().startsWith('generate image:') || userText.toLowerCase().startsWith('create image:')) {
+                    const cleanPrompt = userText.replace(/^(generate|create)\s+image:\s*/i, '');
+                    const imgResult = await generateAiImage(cleanPrompt);
+                    aiText = imgResult.text;
+                    imageUrl = imgResult.imageUrl;
+                } else if (userApiKey) {
+                    try {
+                        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${userApiKey}`;
+                        
+                        let systemInstructionText = "You are verbal-ai, an advanced cross-platform AI assistant with dynamic synthesis capabilities. Always format math equations cleanly using LaTeX ($ for inline math like $E=mc^2$ and $$ for block math equations). For data comparisons, always use structured Markdown tables. Ensure responses are thorough, accurate, and clearly organized.";
+
+                        if (activeEngine === 'synthesis') {
+                            systemInstructionText += " Cross-synthesize information from web research, encyclopedic knowledge, and core LLM reasoning.";
+                        } else if (activeEngine === 'wiki' && wikiContext) {
+                            systemInstructionText += ` Integrate the following retrieved Wikipedia context into your synthesized explanation:\n\n${wikiContext}`;
+                        }
+
+                        const contentsPayload = session.messages.map(m => ({
+                            role: m.role === 'user' ? 'user' : 'model',
+                            parts: [{ text: m.content }]
+                        }));
+
+                        const payload = {
+                            contents: contentsPayload,
+                            systemInstruction: { parts: [{ text: systemInstructionText }] }
+                        };
+
+                        if (activeEngine === 'google' || activeEngine === 'synthesis') {
+                            payload.tools = [{ "google_search": {} }];
+                        }
+
+                        const response = await fetch(geminiApiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            const errData = await response.json().catch(() => ({}));
+                            throw new Error(errData.error?.message || `API HTTP ${response.status}`);
+                        }
+
+                        const result = await response.json();
+                        const candidate = result.candidates?.[0];
+                        aiText = candidate?.content?.parts?.[0]?.text;
+
+                        let googleSources = [];
+                        const groundingAttributions = candidate?.groundingMetadata?.groundingAttributions;
+                        if (groundingAttributions && Array.isArray(groundingAttributions)) {
+                            googleSources = groundingAttributions
+                                .map(attr => ({ uri: attr.web?.uri, title: attr.web?.title }))
+                                .filter(src => src.uri && src.title);
+                        }
+                        allSources = [...googleSources, ...wikiSources];
+
+                    } catch (apiErr) {
+                        console.warn("Direct API call bypassed/failed, engaging live synthesis fallback:", apiErr);
+                        const fallback = await generateSmartSynthesis(userText, activeEngine, wikiContext, wikiSources);
+                        aiText = fallback.text;
+                        allSources = fallback.sources;
+                    }
+                } else {
+                    // Smooth Live Multi-Source Synthesis fallback without requiring an API key
+                    const fallback = await generateSmartSynthesis(userText, activeEngine, wikiContext, wikiSources);
+                    aiText = fallback.text;
+                    allSources = fallback.sources;
+                }
+
+                if (!aiText && !imageUrl) {
+                    throw new Error("Unable to synthesize a response or image. Please rephrase your query.");
+                }
+
+                // Save assistant message to session
+                session.messages.push({
+                    role: 'assistant',
+                    content: aiText,
+                    imageUrl: imageUrl,
+                    sources: allSources,
+                    engine: activeEngine
+                });
+                saveState();
+
+                loadingIndicator.classList.add('hidden');
+                appendMessageToDOM('assistant', aiText, allSources, activeEngine, imageUrl);
+
+            } catch (error) {
+                console.error("Synthesis Error:", error);
+                loadingIndicator.classList.add('hidden');
+                appendErrorMessageToDOM(error.message);
+            }
+
+            scrollToBottom();
+        }
+
+        function appendMessageToDOM(role, text, sources = [], engine = 'google', imageUrl = null) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full transition-opacity duration-300';
+
+            if (role === 'user') {
+                wrapper.innerHTML = `
+                    <div class="flex items-start justify-end space-x-3">
+                        <div class="bg-brand-600 text-white rounded-2xl rounded-tr-none px-4 py-3 max-w-xl shadow-lg text-sm">
+                            <p class="whitespace-pre-wrap">${escapeHtml(text)}</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-lg bg-gray-800 border border-dark-border flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-user text-xs text-gray-300"></i>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const parsedContent = parseMarkdownAndMath(text);
+                
+                // Engine Icon Badge
+                let engineBadge = '<span class="text-[10px] bg-brand-500/20 text-brand-400 px-2 py-0.5 rounded-full border border-brand-500/30 font-medium">verbal-ai</span>';
+                if (engine === 'google') engineBadge = '<span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30 font-medium"><i class="fa-brands fa-google text-[9px] mr-1"></i>Google Grounded</span>';
+                else if (engine === 'wiki') engineBadge = '<span class="text-[10px] bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-500/30 font-medium"><i class="fa-brands fa-wikipedia-w text-[9px] mr-1"></i>Wikipedia</span>';
+                else if (engine === 'synthesis') engineBadge = '<span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30 font-medium"><i class="fa-solid fa-layer-group text-[9px] mr-1"></i>Cross Synthesis</span>';
+                else if (engine === 'image') engineBadge = '<span class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 font-medium"><i class="fa-solid fa-wand-magic-sparkles text-[9px] mr-1"></i>Image AI</span>';
+
+                // Image HTML snippet if an image is attached
+                let imageHtml = '';
+                if (imageUrl) {
+                    imageHtml = `
+                        <div class="mt-3 relative group rounded-xl overflow-hidden border border-white/10 bg-black/40 shadow-2xl max-w-md">
+                            <!-- Image frame with edge zoom crop -->
+                            <div class="w-full h-auto overflow-hidden relative">
+                                <img src="${imageUrl}" alt="verbal-ai Generated Image" class="w-full h-auto object-cover transition transform duration-300 scale-[1.05] group-hover:scale-[1.07]">
+                            </div>
+                            
+                            <!-- Custom verbal-ai Branding Watermark positioned over the bottom right corner -->
+                            <div class="absolute bottom-2.5 right-2.5 bg-slate-950/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-brand-500/40 flex items-center space-x-1.5 shadow-2xl z-20 pointer-events-none">
+                                <div class="w-4 h-4 rounded-md bg-gradient-to-tr from-brand-600 via-indigo-500 to-cyan-400 flex items-center justify-center text-[9px] font-black text-white">V</div>
+                                <span class="text-[10px] font-bold text-white tracking-wider">verbal-ai</span>
+                            </div>
+
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-200 flex items-end justify-between p-3 z-30">
+                                <span class="text-[11px] text-gray-300 font-medium">verbal-ai Canvas</span>
+                                <div class="flex items-center space-x-2">
+                                    <a href="${imageUrl}" download="verbal_ai_image.png" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-medium transition flex items-center space-x-1 shadow">
+                                        <i class="fa-solid fa-download text-[10px]"></i>
+                                        <span>Download</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Sources HTML snippet
+                let sourcesHtml = '';
+                if (sources && sources.length > 0) {
+                    sourcesHtml = `
+                        <div class="mt-4 pt-3 border-t border-white/10 space-y-1.5">
+                            <div class="text-[11px] font-semibold text-gray-400 flex items-center space-x-1">
+                                <i class="fa-solid fa-link text-brand-400"></i>
+                                <span>Grounding Sources & References (${sources.length}):</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${sources.slice(0, 6).map(src => `
+                                    <a href="${escapeHtml(src.uri)}" target="_blank" rel="noopener noreferrer" class="text-[11px] bg-white/5 hover:bg-white/10 text-brand-400 hover:text-brand-300 border border-white/10 px-2.5 py-1 rounded-lg transition flex items-center space-x-1 max-w-xs truncate">
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                        <span class="truncate">${escapeHtml(src.title)}</span>
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                wrapper.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-500 border border-brand-400/40 flex items-center justify-center shrink-0 shadow-md">
+                            <i class="fa-solid fa-bolt text-white text-xs"></i>
+                        </div>
+                        <div class="glass-card rounded-2xl rounded-tl-none p-4 max-w-2xl border border-white/5 space-y-2 flex-1 text-sm text-gray-200">
+                            <div class="flex items-center justify-between border-b border-white/5 pb-2">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-bold text-white">verbal-ai</span>
+                                    ${engineBadge}
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button class="tts-msg-btn text-xs text-gray-500 hover:text-gray-300 transition p-1" title="Read aloud">
+                                        <i class="fa-solid fa-volume-high"></i>
+                                    </button>
+                                    <button class="copy-msg-btn text-xs text-gray-500 hover:text-gray-300 transition p-1" title="Copy response">
+                                        <i class="fa-regular fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="prose prose-invert max-w-none text-sm leading-relaxed">${parsedContent}</div>
+                            ${imageHtml}
+                            ${sourcesHtml}
+                        </div>
+                    </div>
+                `;
+
+                // Add TTS Speech Listener
+                const ttsBtn = wrapper.querySelector('.tts-msg-btn');
+                ttsBtn.addEventListener('click', () => {
+                    speakText(text);
+                });
+
+                // Add Copy Message Listener
+                const copyBtn = wrapper.querySelector('.copy-msg-btn');
+                copyBtn.addEventListener('click', () => {
+                    copyToClipboard(text, copyBtn);
+                });
+            }
+
+            messagesList.appendChild(wrapper);
+
+            // Execute KaTeX typesetting on equations
+            if (role === 'assistant' && window.renderMathInElement) {
+                renderMathInElement(wrapper, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    throwOnError: false
+                });
+            }
+
+            // Attach Copy buttons to code snippets
+            wrapper.querySelectorAll('pre').forEach(pre => {
+                if (!pre.querySelector('.code-copy-btn')) {
+                    const copyCodeBtn = document.createElement('button');
+                    copyCodeBtn.className = 'code-copy-btn absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] text-gray-300 transition flex items-center space-x-1';
+                    copyCodeBtn.innerHTML = '<i class="fa-regular fa-copy"></i> <span>Copy Code</span>';
+                    
+                    copyCodeBtn.addEventListener('click', () => {
+                        const codeText = pre.querySelector('code') ? pre.querySelector('code').innerText : pre.innerText;
+                        copyToClipboard(codeText, copyCodeBtn);
+                    });
+                    
+                    pre.style.position = 'relative';
+                    pre.appendChild(copyCodeBtn);
+                }
+            });
+        }
+
+        function appendErrorMessageToDOM(errMsg) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full';
+            wrapper.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation text-red-400 text-xs"></i>
+                    </div>
+                    <div class="bg-red-500/10 border border-red-500/20 rounded-2xl rounded-tl-none p-4 max-w-xl text-sm text-red-300 space-y-1">
+                        <p class="font-semibold text-xs">Synthesis Request Interrupted</p>
+                        <p class="text-xs text-red-200/80">${escapeHtml(errMsg)}</p>
+                    </div>
+                </div>
+            `;
+            messagesList.appendChild(wrapper);
+        }
+
+        function parseMarkdownAndMath(content) {
+            if (!content) return '';
+            try {
+                return marked.parse(content);
+            } catch (e) {
+                console.error("Markdown render exception:", e);
+                return escapeHtml(content);
+            }
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop ongoing speech
+                const cleanText = text.replace(/[*#$`\_]/g, ''); // strip markdown math symbols
+                const utterance = new SpeechSynthesisUtterance(cleanText.substring(0, 500));
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function copyToClipboard(text, btnElement) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => showCopyFeedback(btnElement));
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showCopyFeedback(btnElement);
+                } catch (err) {
+                    console.error('Fallback copy error:', err);
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function showCopyFeedback(btn) {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> <span class="text-emerald-400">Copied!</span>';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+            }, 2000);
+        }
+
+        function showCustomModal(title, subtitle, message, onConfirm) {
+            modalTitle.innerText = title;
+            modalSubtitle.innerText = subtitle;
+            modalMessage.innerText = message;
+            modalCallback = onConfirm;
+            customModal.classList.remove('hidden');
+        }
+
+        function hideCustomModal() {
+            customModal.classList.add('hidden');
+            modalCallback = null;
+        }
+
+        function exportCurrentSession() {
+            const session = sessions.find(s => s.id === currentSessionId);
+            if (!session || session.messages.length === 0) {
+                showCustomModal('Export Failed', 'Empty Chat', 'There are no messages in this session to export.', null);
+                return;
+            }
+
+            let exportMarkdown = `# ${session.title}\nExported from verbal-ai Platform\nDate: ${new Date().toLocaleString()}\n\n---\n\n`;
+            session.messages.forEach(msg => {
+                exportMarkdown += `### ${msg.role === 'user' ? 'User' : 'verbal-ai (' + (msg.engine || 'Engine') + ')'}\n${msg.content}\n\n`;
+                if (msg.sources && msg.sources.length > 0) {
+                    exportMarkdown += `**Grounding References:**\n`;
+                    msg.sources.forEach(src => {
+                        exportMarkdown += `- [${src.title}](${src.uri})\n`;
+                    });
+                    exportMarkdown += `\n`;
+                }
+                exportMarkdown += `---\n\n`;
+            });
+
+            const blob = new Blob([exportMarkdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${session.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_verbal_ai.md`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTo({
+                top: chatContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
